@@ -106,21 +106,30 @@ def no_bot_messages(message, next):
 def respond_to_messages(body: dict, say: Callable[[str], None]):
     channel = body["event"]["channel"]
     # Timestamps
-    thread_ts = body["event"].get("thread_ts")
-    message_ts = body["event"]["ts"]
-    thread_ts = body["event"]["ts"]
+    thread_ts = body["event"].get(
+        "thread_ts"
+    )  # If the message is in a thread, this field will be populated
+    message_ts = body["event"]["ts"]  # timestamp of the message
+    text = body["event"]["text"]  # text of the message
 
     # Acknowledge first
-    response_message = say(text="Processing your request...", thread_ts=thread_ts)
+    response_message = say(
+        text="Thinking...",
+        thread_ts=thread_ts if thread_ts else message_ts,
+    )
 
     total_limit = 11
     context_messages = []
 
     # Step 1: Fetch threaded messages if available
     if thread_ts:
+        print("thread_ts")
         replies = web_client.conversations_replies(
-            channel=channel, ts=thread_ts, limit=10  # Limit to 10 threaded messages
+            channel=channel,
+            ts=thread_ts,
+            limit=total_limit - 1,
         )
+        pprint(replies["messages"])
         context_messages += replies["messages"]
 
     # Step 2: Fetch parent-level messages
@@ -129,13 +138,12 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             channel=channel,
             limit=total_limit - len(context_messages),
             latest=thread_ts if thread_ts else message_ts,
-            inclusive=False,
+            inclusive=True,
         )
-        context_messages += history["messages"]
+        context_messages += history["messages"].reverse()
 
     formatted_messages = []
     for msg in context_messages:
-        print(msg)
         user = msg["user"]  # User is like 'U0124SFJGAD'
         timestamp = msg["ts"]  # Slack uses 'ts' for timestamps
         content = msg["text"]
@@ -149,14 +157,14 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
 
         formatted_messages.append(f"{content} [{user} @ {readable_timestamp}]")
 
-    formatted_messages.reverse()  # Reverse to maintain chronological order
-
+    print("\n\n\n")
+    pprint(formatted_messages)
+    print("\n\n\n")
     # The current message is the last one in the list
     current_message = formatted_messages[-1]
 
     # Join the messages to form the history string
     history = "\n".join(formatted_messages[:-1])  # Excluding the current message
-    pprint(tools)
     response = humanloop.chat(
         project="coworker/Brain",
         model_config={
@@ -197,7 +205,7 @@ recent_chat_history:
 
     chat_response = response.body["data"][0]
 
-    pprint(chat_response)
+    # pprint(chat_response)
 
     # Update the initial message
     if chat_response["finish_reason"] == "tool_call":
@@ -206,10 +214,11 @@ recent_chat_history:
         if tool_name == "message_user":
             new_message_text = args["message"]
         elif tool_name == "no_action":
-            new_message_text = "No action."
+            new_message_text = "no_action"
             pprint("No action.")
             pass
         else:
+            # TODO: make the say function add to the thread.
             tool_response = call_tool(tool_name, args, tool_list, say)
             print(f"Tool Response: {tool_response}")
             new_message_text = tool_response
