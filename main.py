@@ -55,8 +55,17 @@ def respond_to_messages(body, say):
         messages=[{"role": "user", "content": current_message}],
     )
 
-    humanloop_response = response.body["data"][0]["output"]
-    say(text=humanloop_response)
+    humanloop_response = response["data"]
+
+    print(humanloop_response)
+
+    if humanloop_response["finish_reason"] == "function_call":
+        function_name = humanloop_response["tool_call"]["name"]
+        if function_name == "functions.message_user":
+            slack_bot_response=response_message["function_call"]["message"]
+
+    say(text=slack_bot_response)
+
 
 
 if __name__ == "__main__":
