@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -55,16 +56,15 @@ def respond_to_messages(body, say):
         messages=[{"role": "user", "content": current_message}],
     )
 
-    humanloop_response = response["data"]
+    humanloop_response = response.body["data"][0]
 
-    print(humanloop_response)
+    pprint(humanloop_response)
 
-    if humanloop_response["finish_reason"] == "function_call":
-        function_name = humanloop_response["tool_call"]["name"]
-        if function_name == "functions.message_user":
+    if humanloop_response["finish_reason"] == "tool_call":
+        tool_name = humanloop_response["tool_call"]["name"]
+        if tool_name == "message_user":
             slack_bot_response=response_message["function_call"]["message"]
-
-    say(text=slack_bot_response)
+            say(text=slack_bot_response)
 
 
 
