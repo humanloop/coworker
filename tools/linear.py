@@ -46,6 +46,7 @@ def create_linear_issue(
           id
           title
           description
+          url
         }
       }
     }
@@ -66,7 +67,19 @@ def create_linear_issue(
 
     if response.status_code == 200:
         pprint(response.text)
-        _say(text="SUBMITTED")
+        if response.status_code == 200:
+            response_data = json.loads(response.text)
+            issue_data = (
+                response_data.get("data", {}).get("issueCreate", {}).get("issue", {})
+            )
+            if issue_data:
+                issue_title = issue_data.get("title")
+                issue_description = issue_data.get("description")
+                issue_url = issue_data.get("url")
+                slack_message = f"Issue Created: *<{issue_url}|{issue_title}>*\nDescription: {issue_description}"
+                _say(text=slack_message)
+            else:
+                _say(text="Failed to create issue")
         return json.loads(response.text)
     else:
         raise Exception(f"Failed to create issue: {response.text}")
