@@ -141,6 +141,7 @@ current_message_to_analyse:
             pass
         else:
             tool_response = call_tool(tool_name, args, tool_list, say)
+            print(f"Tool Response: {tool_response}")
             say(text=tool_response)
     else:
         # We want to force it to use a tool
