@@ -56,6 +56,10 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
     text = body["event"]["text"]
     channel = body["event"]["channel"]
 
+    # If the message if from the bot, ignore
+    if body["event"].get("bot_id"):
+        return
+
     # Fetch the most recent 10 messages including the current one
     history_response = web_client.conversations_history(
         channel=channel, limit=11  # 10 previous messages + the current one
@@ -75,7 +79,7 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             float(timestamp.split(".")[0])
         ).strftime("%Y-%m-%d %H:%M:%S UTC")
 
-        formatted_message = f"{readable_timestamp} - {user}: {content}"
+        formatted_message = f"{content} [{user} @ {readable_timestamp}]"
         formatted_messages.append(formatted_message)
 
     formatted_messages.reverse()  # Reverse to maintain chronological order
@@ -115,14 +119,12 @@ recent_chat_history:
 {{history}}
 ###
 
-current_message_to_analyse:
-###
-{{message}}
-###""",
-                }
+""",
+                },
+                {"role": "user", "name": user, "content": current_message},
             ],
         },
-        inputs={"history": history, "message": current_message},
+        inputs={"history": history},
         messages=[],
     )
 
