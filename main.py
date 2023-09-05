@@ -140,7 +140,9 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             inclusive=True,
         )
         context_messages += reversed(replies["messages"])
-        context_messages += [{"user": "arse", "ts": "21", "text": "------------"}]
+        context_messages += [
+            {"user": "end-of-thread", "ts": "0", "text": "------------"}
+        ]
 
     # Step 2: Fetch parent-level messages
     if total_limit - len(context_messages) > 0:
