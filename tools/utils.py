@@ -42,28 +42,6 @@ def parse_function(func: callable):
     return descriptor
 
 
-def parse_annotation(annotation: str):
-    """Convert the Python type annotation to a JSONSchema type string."""
-    # TODO how to reliably map python type hint to json type?
-    return {
-        "str": "string",
-        "int": "number",
-        "float": "number",
-        "bool": "boolean",
-        "List": "array",
-        "list": "array",
-    }[annotation.__name__]
-
-
-def parse_parameter(annotation, docs):
-    """Convert the parameter signature and docstring to JSONSchema."""
-    type_name = parse_annotation(annotation)
-    return {
-        "type": type_name,
-        "description": docs.description if docs is not None else "",
-    }
-
-
 def call_function(response, *functions):
     """Execute the function"""
     choice = response["choices"][0]
@@ -94,6 +72,28 @@ def call_function(response, *functions):
                 return message
 
     return RuntimeError("Function not found")
+
+
+def parse_annotation(annotation: str):
+    """Convert the Python type annotation to a JSONSchema type string."""
+    # TODO how to reliably map python type hint to json type?
+    return {
+        "str": "string",
+        "int": "number",
+        "float": "number",
+        "bool": "boolean",
+        "List": "array",
+        "list": "array",
+    }[annotation.__name__]
+
+
+def parse_parameter(annotation, docs):
+    """Convert the parameter signature and docstring to JSONSchema."""
+    type_name = parse_annotation(annotation)
+    return {
+        "type": type_name,
+        "description": docs.description if docs is not None else "",
+    }
 
 
 if __name__ == "__main__":
