@@ -7,6 +7,7 @@ from humanloop import Humanloop
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk import WebClient
+from pprint import pprint
 
 load_dotenv()
 
@@ -55,6 +56,7 @@ def respond_to_messages(body, say):
         inputs={"history": history, "message": current_message},
         messages=[{"role": "user", "content": current_message}],
     )
+    pprint(response.body)
 
     humanloop_response = response.body["data"][0]
 
