@@ -41,7 +41,7 @@ def parse_function(func: callable):
     return descriptor
 
 
-def call_tool(tool_name: str, args, tool_functions: list):
+def call_tool(tool_name: str, args, tool_functions):
     """Takes a a tool_names and list of tools and calls the appropriate function."""
     for f in tool_functions:
         if f.__name__ == tool_name:

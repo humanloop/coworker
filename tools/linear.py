@@ -58,6 +58,7 @@ def create_linear_issue(
 
 
 def list_linear_teams():
+    """List the IDs of the teams in Linear"""
     url = "https://api.linear.app/graphql"
     headers = {"Authorization": LINEAR_API_KEY, "Content-Type": "application/json"}
 

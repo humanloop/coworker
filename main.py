@@ -10,7 +10,7 @@ from slack_sdk import WebClient
 from pprint import pprint
 
 from tools.linear import create_linear_issue, list_linear_teams
-from tools.utils import call_tool
+from tools.utils import call_tool, parse_function
 
 load_dotenv()
 
@@ -22,6 +22,7 @@ humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
 tool_list = [create_linear_issue, list_linear_teams]
+tools = [parse_function(t) for t in tool_list]
 
 
 @app.event("message")
@@ -56,10 +57,11 @@ def respond_to_messages(body, say):
 
     # Join the messages to form the history string
     history = "\n".join(formatted_messages[:-1])  # Excluding the current message
-
+    pprint(tools)
     response = humanloop.chat(
         project="coworker/Brain",
         model_config={
+            "tools": tools,
             "model": "gpt-4",
             "max_tokens": -1,
             "temperature": 0.7,
@@ -93,7 +95,6 @@ current_message_to_analyse:
         },
         inputs={"history": history, "message": current_message},
         messages=[],
-        tools=tool_list,
     )
 
     humanloop_response = response.body["data"][0]
