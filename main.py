@@ -14,15 +14,21 @@ from tools.utils import call_tool, parse_function
 
 load_dotenv()
 
-app = App(token=os.getenv("SLACK_BOT_TOKEN"))
-web_client = WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
 HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 
+app = App(token=os.getenv("SLACK_BOT_TOKEN"))
+web_client = WebClient(token=SLACK_BOT_TOKEN)
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
 tool_list = [create_linear_issue, list_linear_teams]
 tools = [parse_function(t) for t in tool_list]
+
+
+@app.event("app_home_opened")
+def handle_app_home_opened_events(body, logger):
+    logger.info(body)
 
 
 @app.event("message")
@@ -37,12 +43,13 @@ def respond_to_messages(body, say):
 
     formatted_messages = []
     for msg in history_response["messages"]:
-        user = msg["user"]
+        user = msg["user"]  # User is like 'U0124SFJGAD'
         timestamp = msg["ts"]  # Slack uses 'ts' for timestamps
         content = msg["text"]
 
         # Convert timestamp to human-readable format
-        # Slack's 'ts' is a string like '1623431161.000200' which you can split at the dot and use the left part
+        # Slack's 'ts' is a string like '1623431161.000200' which you can split at the
+        # dot and use the left part
         readable_timestamp = datetime.utcfromtimestamp(
             float(timestamp.split(".")[0])
         ).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -97,19 +104,20 @@ current_message_to_analyse:
         messages=[],
     )
 
-    humanloop_response = response.body["data"][0]
+    chat_response = response.body["data"][0]
 
-    pprint(humanloop_response)
+    pprint(chat_response)
 
-    if humanloop_response["finish_reason"] == "tool_call":
-        tool_name = humanloop_response["tool_call"]["name"]
+    if chat_response["finish_reason"] == "tool_call":
+        tool_name = chat_response["tool_call"]["name"]
         if tool_name == "message_user":
-            slack_bot_response = humanloop_response["tool_call"]
+            slack_bot_response = chat_response["tool_call"]
             say(text=slack_bot_response)
         elif tool_name == "no_action":
+            pprint("No action.")
             pass
         else:
-            args = humanloop_response["tool_call"]["args"]
+            args = chat_response["tool_call"]["args"]
             call_tool(tool_name, args, tool_list)
             say(text=args)
 

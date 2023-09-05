@@ -15,8 +15,6 @@ def parse_function(func: callable):
 
     Args:
         func (callable): The function to parse
-
-
     """
     docs = parse(func.__doc__)
     param_docs = {p.arg_name: p for p in docs.params}
@@ -41,19 +39,16 @@ def parse_function(func: callable):
     return descriptor
 
 
-def call_tool(tool_name: str, args, tool_functions):
-    """Takes a a tool_names and list of tools and calls the appropriate function."""
-    for f in tool_functions:
-        if f.__name__ == tool_name:
-            try:
-                result = f(**args)
-            except ValueError as err:
-                result = f"Error: {err}"
-            return result
-    return RuntimeError("Function not found")
+def parse_parameter(annotation, docs):
+    """Convert the parameter signature and docstring to JSONSchema."""
+    type_name = convert_type(annotation.__name__)
+    return {
+        "type": type_name,
+        "description": docs.description if docs is not None else "",
+    }
 
 
-def parse_annotation(annotation: str):
+def convert_type(annotation_type: str):
     """Convert the Python type annotation to a JSONSchema type string."""
     # TODO how to reliably map python type hint to json type?
     return {
@@ -63,16 +58,19 @@ def parse_annotation(annotation: str):
         "bool": "boolean",
         "List": "array",
         "list": "array",
-    }[annotation.__name__]
+    }[annotation_type]
 
 
-def parse_parameter(annotation, docs):
-    """Convert the parameter signature and docstring to JSONSchema."""
-    type_name = parse_annotation(annotation)
-    return {
-        "type": type_name,
-        "description": docs.description if docs is not None else "",
-    }
+def call_tool(tool_name: str, args, tools):
+    """Takes a a tool_names and list of tools and calls the appropriate function."""
+    for tool in tools:
+        if tool.__name__ == tool_name:
+            try:
+                result = tool(**args)
+            except ValueError as err:
+                result = f"Error: {err}"
+            return result
+    return RuntimeError("Function not found")
 
 
 if __name__ == "__main__":
