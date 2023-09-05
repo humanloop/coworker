@@ -327,6 +327,17 @@ files = [
 ]
 
 [[package]]
+name = "docstring-parser"
+version = "0.15"
+description = "Parse Python docstrings in reST, Google and Numpydoc format"
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "docstring_parser-0.15-py3-none-any.whl", hash = "sha256:d1679b86250d269d06a99670924d6bce45adc00b08069dae8c47d98e89b667a9"},
+    {file = "docstring_parser-0.15.tar.gz", hash = "sha256:48ddc093e8b1865899956fcc03b03e66bb7240c310fac5af81814580c55bf682"},
+]
+
+[[package]]
 name = "frozendict"
 version = "2.3.8"
 description = "A simple immutable dictionary"
@@ -887,4 +898,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e18f19ec1b4e57e1d36782340b6520e4816f358eb51f2a7fde1edfc4ba43a660"
+content-hash = "8ee7b0812d9e943d212898b742cd592d3d98015e1df6251325783fa2891baba6"
