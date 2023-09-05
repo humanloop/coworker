@@ -12,6 +12,7 @@ from slack_sdk import WebClient
 from pprint import pprint
 
 from tools.linear import create_linear_issue, list_linear_teams
+from tools.notion import create_user_features_request
 from tools.slack import message_user, no_action
 from tools.utils import call_tool, parse_function
 
@@ -30,13 +31,9 @@ tool_list = [
     message_user,
     create_linear_issue,
     list_linear_teams,
+    create_user_features_request,
 ]
 tools = [parse_function(t) for t in tool_list]
-
-
-@app.event("app_home_opened")
-def handle_app_home_opened_events(body, logger):
-    logger.info(body)
 
 
 @app.event("team_join")
@@ -45,28 +42,99 @@ def team_join(body, say):
     pprint(body)
 
 
-@app.event("app_home_opened")
-def app_home_opened():
-    print("app home opened")
+# Listener middleware to fetch tasks from external system using user ID
+def fetch_tasks(context, event, next):
+    user = event["user"]
+    try:
+        # Assume get_tasks fetchs list of tasks from DB corresponding to user ID
+        user_tasks = ["go outside", "touch grass"]
+        tasks = user_tasks
+    except Exception:
+        # get_tasks() raises exception because no tasks are found
+        tasks = []
+    finally:
+        # Put user's tasks in context
+        context["tasks"] = tasks
+        next()
 
 
-@app.event("app_mention")
-@app.event("message")
-def respond_to_messages(body: dict, say: Callable[[str], None]):
-    text = body["event"]["text"]
-    channel = body["event"]["channel"]
+# Listener middleware to create a list of section blocks
+def create_sections(context, next):
+    task_blocks = []
+    # Loops through tasks added to context in previous middleware
+    for task in context["tasks"]:
+        task_blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"{task}\n",
+                },
+                "accessory": {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "See task"},
+                    "url": "https://sf.com",
+                },
+            }
+        )
+    # Put list of blocks in context
+    context["blocks"] = task_blocks
+    next()
 
-    # If the message if from the bot, ignore
-    if body["event"].get("bot_id"):
-        return
 
-    # Fetch the most recent 10 messages including the current one
-    history_response = web_client.conversations_history(
-        channel=channel, limit=11  # 10 previous messages + the current one
+# Listen for user opening app home
+# Include fetch_tasks middleware
+@app.event(event="app_home_opened", middleware=[fetch_tasks, create_sections])
+def show_tasks(event, client, context):
+    print("app_home_opened")
+    # Publish view to user's home tab
+    client.views_publish(
+        user_id=event["user"], view={"type": "home", "blocks": context["blocks"]}
     )
 
+
+# Listener middleware which filters out messages with "bot_message" subtype
+def no_bot_messages(message, next):
+    subtype = message.get("subtype")
+    if subtype != "bot_message":
+        next()
+
+
+# TODO: these events might have different structures
+@app.event("app_mention", middleware=[no_bot_messages])
+@app.event("message", middleware=[no_bot_messages])
+def respond_to_messages(body: dict, say: Callable[[str], None]):
+    channel = body["event"]["channel"]
+    # Timestamps
+    thread_ts = body["event"].get("thread_ts")
+    message_ts = body["event"]["ts"]
+    thread_ts = body["event"]["ts"]
+
+    # Acknowledge first
+    response_message = say(text="Processing your request...", thread_ts=thread_ts)
+
+    total_limit = 11
+    context_messages = []
+
+    # Step 1: Fetch threaded messages if available
+    if thread_ts:
+        replies = web_client.conversations_replies(
+            channel=channel, ts=thread_ts, limit=10  # Limit to 10 threaded messages
+        )
+        context_messages += replies["messages"]
+
+    # Step 2: Fetch parent-level messages
+    if total_limit - len(context_messages) > 0:
+        history = web_client.conversations_history(
+            channel=channel,
+            limit=total_limit - len(context_messages),
+            latest=thread_ts if thread_ts else message_ts,
+            inclusive=False,
+        )
+        context_messages += history["messages"]
+
     formatted_messages = []
-    for msg in history_response["messages"]:
+    for msg in context_messages:
         print(msg)
         user = msg["user"]  # User is like 'U0124SFJGAD'
         timestamp = msg["ts"]  # Slack uses 'ts' for timestamps
@@ -79,8 +147,7 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             float(timestamp.split(".")[0])
         ).strftime("%Y-%m-%d %H:%M:%S UTC")
 
-        formatted_message = f"{content} [{user} @ {readable_timestamp}]"
-        formatted_messages.append(formatted_message)
+        formatted_messages.append(f"{content} [{user} @ {readable_timestamp}]")
 
     formatted_messages.reverse()  # Reverse to maintain chronological order
 
@@ -132,24 +199,38 @@ recent_chat_history:
 
     pprint(chat_response)
 
+    # Update the initial message
     if chat_response["finish_reason"] == "tool_call":
         tool_name = chat_response["tool_call"]["name"]
         args = json.loads(chat_response["tool_call"]["arguments"])
         if tool_name == "message_user":
-            message = args["message"]
-            say(text=message)
+            new_message_text = args["message"]
         elif tool_name == "no_action":
+            new_message_text = "No action."
             pprint("No action.")
             pass
         else:
             tool_response = call_tool(tool_name, args, tool_list, say)
             print(f"Tool Response: {tool_response}")
-            say(text=tool_response)
+            new_message_text = tool_response
+
     else:
-        # We want to force it to use a tool
-        # for now we'll just say the response.
         print("TOOL NOT CALLED")
-        say(text=chat_response["output"])
+        new_message_text = chat_response["output"]
+
+    if new_message_text == "no_action":
+        # Delete the message
+        web_client.chat_delete(
+            channel=channel,
+            ts=response_message["ts"],
+        )
+    else:
+        web_client.chat_update(
+            channel=channel,
+            ts=response_message["ts"],
+            text=new_message_text,
+            thread_ts=thread_ts,  # Keep the thread
+        )
 
 
 if __name__ == "__main__":
