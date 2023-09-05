@@ -100,9 +100,15 @@ def no_bot_messages(message, next):
         next()
 
 
+def ignore_deletions(message, next):
+    subtype = message.get("subtype")
+    if subtype != "message_deleted":
+        next()
+
+
 # TODO: these events might have different structures
 @app.event("app_mention", middleware=[no_bot_messages])
-@app.event("message", middleware=[no_bot_messages])
+@app.event("message", middleware=[no_bot_messages, ignore_deletions])
 def respond_to_messages(body: dict, say: Callable[[str], None]):
     channel = body["event"]["channel"]
     # Timestamps
@@ -110,7 +116,6 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
         "thread_ts"
     )  # If the message is in a thread, this field will be populated
     message_ts = body["event"]["ts"]  # timestamp of the message
-    text = body["event"]["text"]  # text of the message
 
     # Acknowledge first
     response_message = say(
