@@ -1,5 +1,6 @@
 """Functions for interacting with Linear"""
 import os
+from typing import List
 from dotenv import load_dotenv
 import requests
 import json
@@ -9,8 +10,19 @@ load_dotenv()
 LINEAR_API_KEY = os.getenv("LINEAR_API_KEY")
 
 
-def create_linear_issue(title, description, team_id, priority, labels, assignee):
-    """Create an issue in Linear"""
+def create_linear_issue(
+    title: str, description: str, team_id: str, priority: str, labels: List[str]
+):
+    """Create an issue in Linear.
+
+    Args:
+        title (str): The title of the issue
+        description (str): The description of the issue
+        team_id (str): The 36 char ID of the team to create the issue in
+        priority (str): The priority of the issue
+        labels (List[str]): The labels to apply to the issue
+
+    """
     url = "https://api.linear.app/graphql"
     headers = {"Authorization": LINEAR_API_KEY, "Content-Type": "application/json"}
 
