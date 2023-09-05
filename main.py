@@ -128,9 +128,14 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             channel=channel,
             ts=thread_ts,
             limit=total_limit - 1,
+            # This is to ignore any added message that we've put in the thread
+            # TODO: maybe it's better to filter out the bot? Just in case we want to
+            # include any other messages that have been added.
+            latest=message_ts,
+            inclusive=True,
         )
-        pprint(replies["messages"])
-        context_messages += replies["messages"]
+        context_messages += reversed(replies["messages"])
+        context_messages += [{"user": "arse", "ts": "21", "text": "------------"}]
 
     # Step 2: Fetch parent-level messages
     if total_limit - len(context_messages) > 0:
@@ -138,9 +143,10 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             channel=channel,
             limit=total_limit - len(context_messages),
             latest=thread_ts if thread_ts else message_ts,
-            inclusive=True,
+            # Avoiding having the parent message in the list if we've got that from the thread
+            inclusive=False if thread_ts else True,
         )
-        context_messages += history["messages"].reverse()
+        context_messages += history["messages"]
 
     formatted_messages = []
     for msg in context_messages:
@@ -158,13 +164,14 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
         formatted_messages.append(f"{content} [{user} @ {readable_timestamp}]")
 
     print("\n\n\n")
-    pprint(formatted_messages)
+    pprint([msg[:40] for msg in formatted_messages])
     print("\n\n\n")
-    # The current message is the last one in the list
-    current_message = formatted_messages[-1]
+    # The current message is the top one in the list
+    current_message = formatted_messages[0]
 
     # Join the messages to form the history string
-    history = "\n".join(formatted_messages[:-1])  # Excluding the current message
+    # Excluding the current message and go from oldest to newest
+    history = "\n".join(formatted_messages[1:][::-1])
     response = humanloop.chat(
         project="coworker/Brain",
         model_config={
@@ -204,8 +211,6 @@ recent_chat_history:
     )
 
     chat_response = response.body["data"][0]
-
-    # pprint(chat_response)
 
     # Update the initial message
     if chat_response["finish_reason"] == "tool_call":
