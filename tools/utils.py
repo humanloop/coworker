@@ -1,4 +1,3 @@
-import json
 from inspect import signature
 from pprint import pprint
 
@@ -44,13 +43,13 @@ def parse_function(func: callable):
 
 def call_tool(tool_name: str, args, tool_functions: list):
     """Takes a a tool_names and list of tools and calls the appropriate function."""
-        for f in tool_functions
-            if f.__name__ == tool_name:
-                try:
-                    result = f(**args)
-                except ValueError as err:
-                    result = f"Error: {err}"
-                return result
+    for f in tool_functions:
+        if f.__name__ == tool_name:
+            try:
+                result = f(**args)
+            except ValueError as err:
+                result = f"Error: {err}"
+            return result
     return RuntimeError("Function not found")
 
 
@@ -81,5 +80,4 @@ if __name__ == "__main__":
 
     functions = [list_linear_teams, create_linear_issue]
     parsed = parse_function(create_linear_issue)
-
     pprint(parsed)

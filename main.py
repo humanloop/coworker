@@ -9,6 +9,9 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk import WebClient
 from pprint import pprint
 
+from tools.linear import create_linear_issue, list_linear_teams
+from tools.utils import call_tool
+
 load_dotenv()
 
 app = App(token=os.getenv("SLACK_BOT_TOKEN"))
@@ -18,7 +21,7 @@ HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
-tools = []
+tool_list = [create_linear_issue, list_linear_teams]
 
 
 @app.event("message")
@@ -54,11 +57,16 @@ def respond_to_messages(body, say):
     # Join the messages to form the history string
     history = "\n".join(formatted_messages[:-1])  # Excluding the current message
 
-    response = humanloop.chat_deployed(
+    response = humanloop.chat(
         project="coworker/Brain",
         model_config={
             "model": "gpt-4",
-            "chat_template": """You are an AI agent that orchestrates other AI agents and organises tasks in slack.
+            "max_tokens": -1,
+            "temperature": 0.7,
+            "chat_template": [
+                {
+                    "role": "system",
+                    "content": """You are an AI agent that orchestrates other AI agents and organises tasks in slack.
 
 You read every message that flows through slack. If you think you can  do something useful, you initiate that action. The only way for you to interact with the user is by using the functions:
 
@@ -80,11 +88,13 @@ current_message_to_analyse:
 ###
 {{message}}
 ###""",
+                }
+            ],
         },
         inputs={"history": history, "message": current_message},
-        messages=[{"role": "user", "content": current_message}],
+        messages=[],
+        tools=tool_list,
     )
-    pprint(response.body)
 
     humanloop_response = response.body["data"][0]
 
@@ -98,7 +108,9 @@ current_message_to_analyse:
         elif tool_name == "no_action":
             pass
         else:
-            args = utils.call_tool(tool_name, args, tools)
+            args = humanloop_response["tool_call"]["args"]
+            call_tool(tool_name, args, tool_list)
+            say(text=args)
 
 
 if __name__ == "__main__":
