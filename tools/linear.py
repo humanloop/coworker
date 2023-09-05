@@ -45,11 +45,41 @@ def create_linear_issue(title, description, team_id, priority, labels, assignee)
         raise Exception(f"Failed to create issue: {response.text}")
 
 
+def list_linear_teams():
+    url = "https://api.linear.app/graphql"
+    headers = {"Authorization": LINEAR_API_KEY, "Content-Type": "application/json"}
+
+    query = """
+    query {
+      teams {
+        nodes {
+          id
+          name
+        }
+      }
+    }
+    """
+
+    response = requests.post(url, headers=headers, json={"query": query})
+
+    if response.status_code == 200:
+        teams_data = (
+            json.loads(response.text).get("data", {}).get("teams", {}).get("nodes", [])
+        )
+        return teams_data
+    else:
+        raise Exception(f"Failed to list teams: {response.text}")
+
+
 if __name__ == "__main__":
+    teams = list_linear_teams()
+    for team in teams:
+        print(f"ID: {team['id']}, Name: {team['name']}")
+
     create_linear_issue(
         title="Test issue",
         description="This is a test issue",
-        team_id="HUM",
+        team_id="a71e2092-2815-4546-8254-00f7ed3f4068",
         priority="HIGH",
         labels=["label1", "label2"],
         assignee="assignee",
