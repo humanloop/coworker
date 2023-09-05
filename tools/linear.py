@@ -1,6 +1,6 @@
 """Functions for interacting with Linear"""
 import os
-from typing import List
+from typing import Callable, List
 from dotenv import load_dotenv
 import requests
 import json
@@ -15,6 +15,8 @@ def create_linear_issue(
     description: str,
     team_id: str,
     priority: str,
+    confirmed: bool,
+    _say: Callable[[str], None] = print,
 ):
     """Create an issue in Linear.
 
@@ -24,6 +26,9 @@ def create_linear_issue(
         team_id (str): The 36 char ID of the team to create the issue in
         priority (str): The priority of the issue
         labels (List[str]): The labels to apply to the issue
+        confirmed (bool): Whether the user has confirmed the details of the issue
+            as in they have seen the full json arguments and accepted
+            (default False)
 
     """
     url = "https://api.linear.app/graphql"
@@ -52,12 +57,16 @@ def create_linear_issue(
         "teamId": "a71e2092-2815-4546-8254-00f7ed3f4068",
     }
 
+    if not confirmed:
+        _say(text=json.dumps(variables, indent=4))
+
     response = requests.post(
         url, headers=headers, json={"query": query, "variables": variables}
     )
 
     if response.status_code == 200:
         pprint(response.text)
+        _say(text="SUBMITTED")
         return json.loads(response.text)
     else:
         raise Exception(f"Failed to create issue: {response.text}")

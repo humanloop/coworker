@@ -2,6 +2,7 @@ import json
 import os
 from pprint import pprint
 from datetime import datetime
+from typing import Callable
 
 from dotenv import load_dotenv
 from humanloop import Humanloop
@@ -24,7 +25,12 @@ web_client = WebClient(token=SLACK_BOT_TOKEN)
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
-tool_list = [create_linear_issue, list_linear_teams, no_action, message_user]
+tool_list = [
+    no_action,
+    message_user,
+    create_linear_issue,
+    list_linear_teams,
+]
 tools = [parse_function(t) for t in tool_list]
 
 
@@ -46,7 +52,7 @@ def app_home_opened():
 
 @app.event("app_mention")
 @app.event("message")
-def respond_to_messages(body, say):
+def respond_to_messages(body: dict, say: Callable[[str], None]):
     text = body["event"]["text"]
     channel = body["event"]["channel"]
 
@@ -57,6 +63,7 @@ def respond_to_messages(body, say):
 
     formatted_messages = []
     for msg in history_response["messages"]:
+        print(msg)
         user = msg["user"]  # User is like 'U0124SFJGAD'
         timestamp = msg["ts"]  # Slack uses 'ts' for timestamps
         content = msg["text"]
@@ -133,7 +140,7 @@ current_message_to_analyse:
             pprint("No action.")
             pass
         else:
-            tool_response = call_tool(tool_name, args, tool_list)
+            tool_response = call_tool(tool_name, args, tool_list, say)
             say(text=tool_response)
     else:
         # We want to force it to use a tool

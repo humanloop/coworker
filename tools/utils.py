@@ -1,5 +1,6 @@
 from inspect import signature
 from pprint import pprint
+from typing import Callable, List
 
 from docstring_parser import parse
 
@@ -10,22 +11,24 @@ class Message:
     content: str
 
 
-def parse_function(func: callable):
+def parse_function(func: Callable):
     """Creates JSON Schema from docstring and type annotations.
 
     Args:
-        func (callable): The function to parse
+        func (Callable): The function to parse
     """
     docs = parse(func.__doc__)
     param_docs = {p.arg_name: p for p in docs.params}
     sig = signature(func)
-    required = [
-        k for k, v in sig.parameters.items() if v.kind == v.POSITIONAL_OR_KEYWORD
-    ]
+    # Drop any parameters that are private (with leading `_`)
+    parameters = {k: v for k, v in sig.parameters.items() if not k.startswith("_")}
+
+    required = [k for k, v in parameters.items() if v.kind == v.POSITIONAL_OR_KEYWORD]
 
     properties = {
         name: parse_parameter(p.annotation, param_docs.get(name))
-        for name, p in sig.parameters.items()
+        for name, p in parameters.items()
+        if not name.startswith("_")
     }
     descriptor = {
         "name": func.__name__,
@@ -61,12 +64,17 @@ def convert_type(annotation_type: str):
     }[annotation_type]
 
 
-def call_tool(tool_name: str, args, tools):
+def call_tool(tool_name: str, args: dict, tools: List[Callable], say: Callable):
     """Takes a a tool_names and list of tools and calls the appropriate function."""
     for tool in tools:
         if tool.__name__ == tool_name:
             try:
-                result = tool(**args)
+                # If the tool has a say argument, pass the say function to it
+                if "_say" in signature(tool).parameters:
+                    result = tool(**args, _say=say)
+                else:
+                    result = tool(**args)
+
             except ValueError as err:
                 result = f"Error: {err}"
             return result
