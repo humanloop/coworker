@@ -31,6 +31,18 @@ def handle_app_home_opened_events(body, logger):
     logger.info(body)
 
 
+@app.event("team_join")
+def team_join(body, say):
+    print("team_join")
+    pprint(body)
+
+
+@app.event("app_home_opened")
+def app_home_opened():
+    print("app home opened")
+
+
+@app.event("app_mention")
 @app.event("message")
 def respond_to_messages(body, say):
     text = body["event"]["text"]
@@ -75,20 +87,19 @@ def respond_to_messages(body, say):
             "chat_template": [
                 {
                     "role": "system",
-                    "content": """You are an AI agent that orchestrates other AI agents and organises tasks in slack.
+                    "content": """
+You are an AI agent that orchestrates other AI agents and organises tasks in Slack.
 
-You read every message that flows through slack. If you think you can  do something useful, you initiate that action. The only way for you to interact with the user is by using the functions:
+You read every message that flows through Slack. If you think you can do something useful, you initiate that action. 
+The only way for you to interact with the user is by using the functions provided.
 
-1.  message_user
-2. linear_ticket
-3. store_user_feedback
-3. no_task
+Before taking any action you should always send a message to the user with your 
+suggested next step and only do the actual task execution if you get their confirmation.
 
-Before taking any action you should always send a message to the user with your suggested next step and only do the actual task execution if you get their confirmation. 
+The majority of messages should use the "no_task" function. Only use a different 
+function if you're very sure it will be useful as wse want to avoid bothering users.
 
-The majority of messages should use the "no_task" function. Only use a different function if you're very sure it will be useful. We want to avoid bothering users.
-
-recent_chat_history
+recent_chat_history:
 ###
 {{history}}
 ###
@@ -120,6 +131,11 @@ current_message_to_analyse:
             args = chat_response["tool_call"]["args"]
             call_tool(tool_name, args, tool_list)
             say(text=args)
+    else:
+        # We want to force it to use a tool
+        # for now we'll just say the response.
+        print("TOOL NOT CALLED")
+        say(text=chat_response["output"])
 
 
 if __name__ == "__main__":
