@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "coworker"
+version = "0.1.0"
+description = "AI Coworker"
+authors = ["Raza Habib <raza@humanloop.com>", "Jordan Burgess <jordan@humanloop.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31.0"
+slack-bolt = "^1.18.0"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
