@@ -46,7 +46,11 @@ def create_linear_issue(
     }
     """
 
-    variables = {"title": title, "description": description, "teamId": team_id}
+    variables = {
+        "title": title,
+        "description": description,
+        "teamId": "a71e2092-2815-4546-8254-00f7ed3f4068",
+    }
 
     response = requests.post(
         url, headers=headers, json={"query": query, "variables": variables}
@@ -54,7 +58,6 @@ def create_linear_issue(
 
     if response.status_code == 200:
         pprint(response.text)
-
         return json.loads(response.text)
     else:
         raise Exception(f"Failed to create issue: {response.text}")

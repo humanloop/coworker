@@ -1,3 +1,4 @@
+import json
 import os
 from pprint import pprint
 from datetime import datetime
@@ -124,16 +125,16 @@ current_message_to_analyse:
 
     if chat_response["finish_reason"] == "tool_call":
         tool_name = chat_response["tool_call"]["name"]
+        args = json.loads(chat_response["tool_call"]["arguments"])
         if tool_name == "message_user":
-            slack_bot_response = chat_response["tool_call"]
-            say(text=slack_bot_response)
+            message = args["message"]
+            say(text=message)
         elif tool_name == "no_action":
             pprint("No action.")
             pass
         else:
-            args = chat_response["tool_call"]["arguments"]
-            call_tool(tool_name, args, tool_list)
-            say(text=args)
+            tool_response = call_tool(tool_name, args, tool_list)
+            say(text=tool_response)
     else:
         # We want to force it to use a tool
         # for now we'll just say the response.
