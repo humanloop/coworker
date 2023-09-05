@@ -18,6 +18,8 @@ HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
+tools= []
+
 @app.event("message")
 def respond_to_messages(body, say):
     text = body["event"]["text"]
@@ -67,6 +69,11 @@ def respond_to_messages(body, say):
         if tool_name == "message_user":
             slack_bot_response=response_message["function_call"]["message"]
             say(text=slack_bot_response)
+        elif: tool_name = "no_action":
+            pass
+        else:
+            args = 
+            utils.call_tool(tool_name, args, tools)
 
 
 

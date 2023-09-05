@@ -35,35 +35,15 @@ def parse_function(func: callable):
     return descriptor
 
 
-def call_function(response, *functions):
-    """Execute the function"""
-    choice = response["choices"][0]
-    if choice["finish_reason"] == "function_call":
-        func_data = choice["message"]["function_call"]
-        try:
-            args = json.loads(func_data["arguments"])
-        except ValueError as err:
-            print("Error parsing arguments for function call")
-            print("Function call:", func_data)
-            # TODO: raise an error here
-            raise ValueError("Error parsing arguments for function call")
-        name = func_data["name"]
-
-        # TODO: just find the function rather than the loop
-        for f in functions:
-            if f.__name__ == name:
+def call_tool(tool_name: str, args, tool_functions: list):
+    """Takes a a tool_names and list of tools and calls the appropriate function."""
+        for f in tool_functions
+            if f.__name__ == tool_name:
                 try:
                     result = f(**args)
                 except ValueError as err:
-                    # TODO: raise an error here
                     result = f"Error: {err}"
-                message = {
-                    "role": "function",
-                    "name": name,
-                    "content": json.dumps(result),
-                }
-                return message
-
+                return result
     return RuntimeError("Function not found")
 
 
