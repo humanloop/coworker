@@ -11,7 +11,10 @@ LINEAR_API_KEY = os.getenv("LINEAR_API_KEY")
 
 
 def create_linear_issue(
-    title: str, description: str, team_id: str, priority: str, labels: List[str]
+    title: str,
+    description: str,
+    team_id: str,
+    priority: str,
 ):
     """Create an issue in Linear.
 
