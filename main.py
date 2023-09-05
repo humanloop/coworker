@@ -10,6 +10,7 @@ from slack_sdk import WebClient
 from pprint import pprint
 
 from tools.linear import create_linear_issue, list_linear_teams
+from tools.slack import message_user, no_action
 from tools.utils import call_tool, parse_function
 
 load_dotenv()
@@ -22,7 +23,7 @@ web_client = WebClient(token=SLACK_BOT_TOKEN)
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
-tool_list = [create_linear_issue, list_linear_teams]
+tool_list = [create_linear_issue, list_linear_teams, no_action, message_user]
 tools = [parse_function(t) for t in tool_list]
 
 
@@ -96,8 +97,10 @@ The only way for you to interact with the user is by using the functions provide
 Before taking any action you should always send a message to the user with your 
 suggested next step and only do the actual task execution if you get their confirmation.
 
-The majority of messages should use the "no_task" function. Only use a different 
-function if you're very sure it will be useful as wse want to avoid bothering users.
+The majority of messages should use the "no_action" function. Only use a different 
+function if you're very sure it will be useful as wse want to avoid bothering users. 
+
+ONLY CALL A FUNCTION, DO NOT RESPOND WITH TEXT.
 
 recent_chat_history:
 ###
@@ -128,7 +131,7 @@ current_message_to_analyse:
             pprint("No action.")
             pass
         else:
-            args = chat_response["tool_call"]["args"]
+            args = chat_response["tool_call"]["arguments"]
             call_tool(tool_name, args, tool_list)
             say(text=args)
     else:
