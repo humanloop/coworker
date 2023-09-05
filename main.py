@@ -18,7 +18,7 @@ HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
 
-tools= []
+tool_list =  [create_linear_issue, list_linear_teams]
 
 @app.event("message")
 def respond_to_messages(body, say):
@@ -53,11 +53,15 @@ def respond_to_messages(body, say):
     # Join the messages to form the history string
     history = "\n".join(formatted_messages[:-1])  # Excluding the current message
 
-    response = humanloop.chat_deployed(
+    response = humanloop.chat(
         project="coworker/Brain",
         model_config={
-            "model": "gpt-4",
-            "chat_template": """You are an AI agent that orchestrates other AI agents and organises tasks in slack.
+             "model": "gpt-4",
+             "max_tokens": -1,
+            "temperature": 0.7,
+            "chat_template": [
+                {"role": "system",
+                 "content": """You are an AI agent that orchestrates other AI agents and organises tasks in slack.
 
 You read every message that flows through slack. If you think you can  do something useful, you initiate that action. The only way for you to interact with the user is by using the functions:
 
@@ -78,12 +82,11 @@ recent_chat_history
 current_message_to_analyse:
 ###
 {{message}}
-###""",
-        },
+###"""}]},
         inputs={"history": history, "message": current_message},
-        messages=[{"role": "user", "content": current_message}],
+        messages=[],
+        tools = tool_list,
     )
-    pprint(response.body)
 
     humanloop_response = response.body["data"][0]
 
@@ -92,12 +95,12 @@ current_message_to_analyse:
     if humanloop_response["finish_reason"] == "tool_call":
         tool_name = humanloop_response["tool_call"]["name"]
         if tool_name == "message_user":
-            slack_bot_response=response_message["function_call"]["message"]
+            slack_bot_response = humanloop_response["function_call"]["message"]
             say(text=slack_bot_response)
-        elif: tool_name = "no_action":
+        elif tool_name == "no_task":
             pass
         else:
-            args = 
+            args = None
             utils.call_tool(tool_name, args, tools)
 
 
