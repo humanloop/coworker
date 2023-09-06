@@ -10,8 +10,7 @@ from slack_sdk import WebClient
 load_dotenv()
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-
-slack = App(token=os.getenv("SLACK_BOT_TOKEN"))
+slack = App(token=SLACK_BOT_TOKEN)
 web_client = WebClient(token=SLACK_BOT_TOKEN)
 
 

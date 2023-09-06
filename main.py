@@ -1,17 +1,15 @@
 import json
 import os
-from pprint import pprint
 from datetime import datetime
+from pprint import pprint
 from typing import Callable
 
 from dotenv import load_dotenv
 from humanloop import Humanloop
-from pprint import pprint
-
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from tools.linear import create_linear_issue, list_linear_teams
-from tools.slack import message_user, no_action, web_client, slack
+from tools.slack import message_user, no_action, slack, web_client
 from tools.utils import call_tool, parse_function
 
 load_dotenv()
@@ -91,7 +89,7 @@ def show_tasks(event, client, context):
 @slack.event("app_mention")
 @slack.event("message")
 def respond_to_messages(body: dict, say: Callable[[str], None]):
-    print(f"EVENT: {body['event']}")
+    print(f"EVENT TYPE: {body['event']['type']}")
 
     # Ignore bot messages and deletions
     if "subtype" in body["event"] and body["event"]["subtype"] in [
@@ -159,9 +157,9 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
 
         formatted_messages.append(f"{content} [{user} @ {readable_timestamp}]")
 
-    print("\n\n\n")
+    print("\n\n")
     pprint([msg[:40] for msg in formatted_messages])
-    print("\n\n\n")
+    print("\n\n")
     # The current message is the top one in the list
     current_message = formatted_messages[0]
 
@@ -186,7 +184,6 @@ The only way for you to interact with the user is by using the functions provide
 
 Before taking any action you should always send a message to the user with your 
 suggested next step and only do the actual task execution if you get their confirmation.
-Include a draft of what you plan to do for the user to approve.
 
 The majority of messages should use the "no_action" function. Only use a different 
 function if you're very sure it will be useful as wse want to avoid bothering users. 
@@ -209,6 +206,13 @@ recent_chat_history:
 
     chat_response = response.body["data"][0]
 
+    helpers = {
+        "web_client": web_client,
+        "channel": channel,
+        "thread_ts": thread_ts,
+        "response_message": response_message,
+    }
+
     # Update the initial message
     if chat_response["finish_reason"] == "tool_call":
         tool_name = chat_response["tool_call"]["name"]
@@ -221,7 +225,7 @@ recent_chat_history:
             pass
         else:
             # TODO: make the say function add to the thread.
-            tool_response = call_tool(tool_name, args, tool_list, say)
+            tool_response = call_tool(tool_name, args, tool_list, helpers)
             print(f"Tool Response: {tool_response}")
             new_message_text = tool_response
 
