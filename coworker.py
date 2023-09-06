@@ -17,15 +17,16 @@ load_dotenv()
 HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
 
-tool_list = [
+ENABLED_TOOLS = [
     no_action,
     message_user,
     create_linear_issue,
     list_linear_teams,
 ]
-tools = [parse_function(t) for t in tool_list]
+ENABLED_CHANNELS = ["C05H2KT4LP5", "C05RKHTR0LQ"]  # bugs  # coworker-testing
 
-enabled_channels = ["C05H2KT4LP5", "C05RKHTR0LQ"]  # bugs  # coworker-testing
+
+tool_schemas = [parse_function(t) for t in ENABLED_TOOLS]
 
 
 @slack.event("team_join")
@@ -48,7 +49,7 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
         return
 
     channel = body["event"]["channel"]
-    if channel not in enabled_channels:
+    if channel not in ENABLED_CHANNELS:
         return
 
     message_ts = body["event"]["ts"]  # timestamp of the message
@@ -118,7 +119,7 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
     response = humanloop.chat(
         project="coworker/Brain",
         model_config={
-            "tools": tools,
+            "tools": tool_schemas,
             "model": "gpt-4",
             "max_tokens": -1,
             "temperature": 0.7,
@@ -174,7 +175,7 @@ recent_chat_history:
             pass
         else:
             # TODO: make the say function add to the thread.
-            tool_response = call_tool(tool_name, args, tool_list, helpers)
+            tool_response = call_tool(tool_name, args, ENABLED_TOOLS, helpers)
             print(f"Tool Response: {tool_response}")
             new_message_text = tool_response
 

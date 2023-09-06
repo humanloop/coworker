@@ -45,17 +45,19 @@ To get this working, you need to setup a new Slack App, get API keys for any too
 3. Get your `OPENAI_API_TOKEN` from https://platform.openai.com/account/api-keys 
 
 
-**Choose channels the AI should be in, and what tools it has access to**
+**Adding new tools for the AI**
 
-1. 
+To add a new action, create a python function in `/tools` with type annotations and a good dosctring (this is important as it's what the AI uses to know when to call it). Then import it and add it to `ENABLED_TOOLS` variable in `coworker.py`.
+
+By default the app will be in all channels. You can change this by editing the `ENABLED_CHANNELS` variable in `coworker.py`
+
 
 Running locally
 ---------------
 1. Clone this repo
-2. Copy `.env.example`` to `.env` and fill in the values
+2. Copy `.env.example` to `.env` and fill in the values
 3. `poetry install`
 4. `poetry run python coworker.py`
-
 
 
 Deployment
