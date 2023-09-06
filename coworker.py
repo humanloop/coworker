@@ -34,57 +34,6 @@ def team_join(body, say):
     pprint(body)
 
 
-# Listener middleware to fetch tasks from external system using user ID
-def fetch_tasks(context, event, next):
-    user = event["user"]
-    try:
-        # Assume get_tasks fetchs list of tasks from DB corresponding to user ID
-        user_tasks = ["go outside", "touch grass"]
-        tasks = user_tasks
-    except Exception:
-        # get_tasks() raises exception because no tasks are found
-        tasks = []
-    finally:
-        # Put user's tasks in context
-        context["tasks"] = tasks
-        next()
-
-
-# Listener middleware to create a list of section blocks
-def create_sections(context, next):
-    task_blocks = []
-    # Loops through tasks added to context in previous middleware
-    for task in context["tasks"]:
-        task_blocks.append(
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"{task}\n",
-                },
-                "accessory": {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "See task"},
-                    "url": "https://sf.com",
-                },
-            }
-        )
-    # Put list of blocks in context
-    context["blocks"] = task_blocks
-    next()
-
-
-# Listen for user opening app home
-# Include fetch_tasks middleware
-@slack.event(event="app_home_opened", middleware=[fetch_tasks, create_sections])
-def show_tasks(event, client, context):
-    print("app_home_opened")
-    # Publish view to user's home tab
-    client.views_publish(
-        user_id=event["user"], view={"type": "home", "blocks": context["blocks"]}
-    )
-
-
 # TODO: these events might have different structures
 @slack.event("app_mention")
 @slack.event("message")

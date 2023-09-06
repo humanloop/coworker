@@ -16,13 +16,39 @@ Principles
 Setup
 ------
 
-1. Create a Slack app and install it in your workspace
+To get this working, you need to setup a new Slack App, get API keys for any tools you want to use e.g. Linear, Notion etc, and get Humanloop/OpenAI keys for the AI.
 
-Go to api.slack.com
 
+
+**Slack App Setup**
+
+1. Create a New App:
+    1. Go to https://api.slack.com/apps and click on “Create New App”.
+    2. Give it a name and select the workspace you want to install it to.
+    3. Click “Create App”.
+2. Permissions:
+    1. In the sidebar, navigate to “OAuth & Permissions”.
+    2. Under “Scopes”, add the following bot token scopes: `app_mentions:read`, `channels:history`, `chat:write`, `im:history`
+    3. Install the app to your workspace by clicking “Install App”.
+    4. Find the “Bot User OAuth Token”. This is your `SLACK_BOT_TOKEN` which starts with `xoxb-`.
+3. Enable Socket Mode:
+    1. In the sidebar, navigate to “Socket Mode”.
+    2. Turn on “Enable Socket Mode”.
+    3. Generate a new token under “App-Level Tokens”. This is your `SLACK_APP_TOKEN` which starts with `xapp-`.
+
+
+**Set up a Humanloop / OpenAI account for the AI**
+
+1. Go to https://humanloop.com/signup, and start a free trial
+2. Get your `HUMANLOOP_API_TOKEN` from `https://app.humanloop.com/account/api-keys`
+3. Get your `OPENAI_API_TOKEN` from https://platform.openai.com/account/api-keys 
 
 Running locally
 ---------------
+1. Clone this repo
+2. 
+2. `poetry install`
+3. `poetry run python coworker.py`
 
 
 
