@@ -9,9 +9,10 @@ Coworker is an open source framework for practical, helpful AI assistants. It li
 Principles
 ----------
 
-1. **Simple** - The base framework here is simple. Message comes in, AI decides what action to take.
-2. **Extensible** - Coworker should be transparent about what it is doing and why. It should be easy to see what it is doing and why.
-3. **Human in the loop** - Coworker should be able to ask for help from a human when it is unsure of what to do. 
+1. **Context Aware** - Unlike other AI chatbots, it should have knowledge of your context. The conversation your having, the background goals at your company etc.
+
+2. **Extensible** - It should be extremely easy for a developer to add a new capability to the coworker that's relevant for their company.
+3. **Human in the loop** - We want to give Coworker really powerful capabilities. To do that in a way that maintains trust, it should be transparent to a user what the AI is doing and always get approval for its actions.
 
 Setup
 ------
