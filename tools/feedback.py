@@ -5,11 +5,11 @@ def log_user_feedback(
     category: str,
     date: str,
     _say,
-    _filename: str = "feedback.csv",
+    _filename: str = "tools/feedback.csv",
 ):
     """Records user feedback from customers so that it can be later used
     to inform product roadmaps.
-    
+
       Args
         company_name (str): Name of the company that provided the feedback if known.
 
