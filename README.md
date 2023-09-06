@@ -21,9 +21,8 @@ Setup
 
 To get this working, you need to setup a new Slack App, get API keys for any tools you want to use e.g. Linear, Notion etc, and get Humanloop/OpenAI keys for the AI.
 
-
-
-**Slack App Setup**
+<details>
+<summary>Slack App Setup</summary>
 
 1. Create a New App:
     1. Go to https://api.slack.com/apps and click on “Create New App”.
@@ -38,16 +37,23 @@ To get this working, you need to setup a new Slack App, get API keys for any too
     1. In the sidebar, navigate to “Socket Mode”.
     2. Turn on “Enable Socket Mode”.
     3. Generate a new token under “App-Level Tokens”. This is your `SLACK_APP_TOKEN` which starts with `xapp-`.
+</details>
 
 
-**Set up a Humanloop / OpenAI account for the AI**
+
+<details>
+<summary>
+Set up a Humanloop / OpenAI account for the AI
+</summary>
 
 1. Go to https://humanloop.com/signup, and start a free trial
 2. Get your `HUMANLOOP_API_TOKEN` from `https://app.humanloop.com/account/api-keys`
 3. Get your `OPENAI_API_TOKEN` from https://platform.openai.com/account/api-keys 
 
+</details>
 
-**Adding new tools for the AI**
+
+##### Adding new tools for the AI
 
 To add a new action, create a python function in `/tools` with type annotations and a good dosctring (this is important as it's what the AI uses to know when to call it). Then import it and add it to `ENABLED_TOOLS` variable in `coworker.py`.
 
@@ -88,12 +94,12 @@ Road Map
 - [x] GPT-4 bot that can read all messages in slack and responds when appropriate
 - [x] Ability to recognise conversation about a bug and offer to write a Linear ticket then do it
 - [x] Ability to recognise conversation about user feedback and save it to a central place
-- [] Make the AI responses be in threads so as to avoid cluttering the main feed
-- [] Ask for permission to do things
-- [] Add more knowledge sources like Notion, Drive or Email (could use something like SID to handle access permissions)
-- [] Daily/Weekly summaries of the most important conversations had for engineering, product and sales
-- [] Inegrations with meeting note-takes like Fathom or Otter so that the AI can answer questions
-- [] Integration with a vector database or similar that the model can read and write from to maintain long term memory
+- [ ] Make the AI responses be in threads so as to avoid cluttering the main feed
+- [ ] Ask for permission to do things
+- [ ] Add more knowledge sources like Notion, Drive or Email (could use something like SID to handle access permissions)
+- [ ] Daily/Weekly summaries of the most important conversations had for engineering, product and sales
+- [ ] Inegrations with meeting note-takes like Fathom or Otter so that the AI can answer questions
+- [ ] Integration with a vector database or similar that the model can read and write from to maintain long term memory
 
 
 

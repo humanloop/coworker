@@ -10,8 +10,9 @@ from slack_sdk import WebClient
 load_dotenv()
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-slack = App(token=SLACK_BOT_TOKEN)
+SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")
 web_client = WebClient(token=SLACK_BOT_TOKEN)
+slack = App(token=SLACK_BOT_TOKEN)
 
 
 def no_action():

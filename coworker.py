@@ -37,10 +37,34 @@ def team_join(body, say):
     pprint(body)
 
 
-# TODO: these events might have different structures
-@slack.event("app_mention")
+@slack.event("app_home_opened")
+def handle_app_home_opened_events(body, logger):
+    print(f"EVENT TYPE: {body['event']['type']}")
+
+
 @slack.event("message")
-def respond_to_messages(body: dict, say: Callable[[str], None]):
+def handle_message(body: dict, say: Callable[[str], None]):
+    """A message was sent to a channel"""
+    print(f"EVENT TYPE: {body['event']['type']}")
+    # Ignore bot messages and deletions
+    if "subtype" in body["event"] and body["event"]["subtype"] in [
+        "bot_message",
+        "message_deleted",
+        "message_changed",
+    ]:
+        print(f'{body["event"]["subtype"]}')
+        return
+
+    # If in public channels (not a DM) check if the channel is enabled
+    if body["event"]["channel_type"] == "channel":
+        if body["event"]["channel"] not in ENABLED_CHANNELS:
+            return
+
+    return respond(body, say)
+
+
+@slack.event("app_mention")
+def handle_app_mentions(body: dict, say: Callable[[str], None]):
     print(f"EVENT TYPE: {body['event']['type']}")
 
     # Ignore bot messages and deletions
@@ -49,14 +73,14 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
         "message_deleted",
     ]:
         return
+    return respond(body, say)
 
-    channel = body["event"]["channel"]
-    if channel not in ENABLED_CHANNELS:
-        return
 
+def respond(body: dict, say: Callable[[str], None]):
     message_ts = body["event"]["ts"]  # timestamp of the message
     # If the message is in a thread, this field will be populated
     thread_ts = body["event"].get("thread_ts")
+    channel = body["event"]["channel"]
 
     # Acknowledge first
     response_message = say(
