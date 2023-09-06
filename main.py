@@ -12,7 +12,6 @@ from slack_sdk import WebClient
 from pprint import pprint
 
 from tools.linear import create_linear_issue, list_linear_teams
-from tools.notion import create_user_features_request
 from tools.slack import message_user, no_action
 from tools.utils import call_tool, parse_function
 
@@ -31,7 +30,6 @@ tool_list = [
     message_user,
     create_linear_issue,
     list_linear_teams,
-    create_user_features_request,
 ]
 tools = [parse_function(t) for t in tool_list]
 
@@ -250,7 +248,7 @@ recent_chat_history:
             channel=channel,
             ts=response_message["ts"],
             text=new_message_text,
-            thread_ts=thread_ts,  # Keep the thread
+            # thread_ts=thread_ts,  # Keep the thread # Not sure what this does
         )
 
 
