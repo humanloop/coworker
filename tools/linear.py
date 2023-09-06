@@ -26,9 +26,8 @@ def create_linear_issue(
         team_id (str): The 36 char ID of the team to create the issue in
         priority (str): The priority of the issue
         labels (List[str]): The labels to apply to the issue
-        confirmed (bool): Whether the user has confirmed the details of the issue
-            as in they have seen the full json arguments and accepted
-            (default False)
+        confirmed (bool): Whether the user has confirmed the details of the issue \
+          as in they have seen the full json arguments and accepted (default False)
 
     """
     url = "https://api.linear.app/graphql"
