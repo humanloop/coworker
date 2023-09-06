@@ -43,12 +43,17 @@ To get this working, you need to setup a new Slack App, get API keys for any too
 2. Get your `HUMANLOOP_API_TOKEN` from `https://app.humanloop.com/account/api-keys`
 3. Get your `OPENAI_API_TOKEN` from https://platform.openai.com/account/api-keys 
 
+
+**Choose channels the AI should be in, and what tools it has access to**
+
+1. 
+
 Running locally
 ---------------
 1. Clone this repo
-2. 
-2. `poetry install`
-3. `poetry run python coworker.py`
+2. Copy `.env.example`` to `.env` and fill in the values
+3. `poetry install`
+4. `poetry run python coworker.py`
 
 
 
@@ -75,15 +80,15 @@ Road Map
 --------
 
 
-[x] GPT-4 bot that can read all messages in slack and responds when appropriate
-[x] Ability to recognise conversation about a bug and offer to write a Linear ticket then do it
-[x] Ability to recognise conversation about user feedback and save it to a central place
-[] Make the AI responses be in threads so as to avoid cluttering the main feed
-[] Ask for permission to do things
-[] Add more knowledge sources like Notion, Drive or Email (could use something like SID to handle access permissions)
-[] Daily/Weekly summaries of the most important conversations had for engineering, product and sales
-[] Inegrations with meeting note-takes like Fathom or Otter so that the AI can answer questions
-[] Integration with a vector database or similar that the model can read and write from to maintain long term memory
+- [x] GPT-4 bot that can read all messages in slack and responds when appropriate
+- [x] Ability to recognise conversation about a bug and offer to write a Linear ticket then do it
+- [x] Ability to recognise conversation about user feedback and save it to a central place
+- [] Make the AI responses be in threads so as to avoid cluttering the main feed
+- [] Ask for permission to do things
+- [] Add more knowledge sources like Notion, Drive or Email (could use something like SID to handle access permissions)
+- [] Daily/Weekly summaries of the most important conversations had for engineering, product and sales
+- [] Inegrations with meeting note-takes like Fathom or Otter so that the AI can answer questions
+- [] Integration with a vector database or similar that the model can read and write from to maintain long term memory
 
 
 
