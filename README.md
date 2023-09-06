@@ -1,6 +1,9 @@
 Coworker
 ===========
 
+![Logo](./coworker-logo.png)
+
+
 Your AI Coworker that lives in Slack.
 
 Coworker is an open source framework for practical, helpful AI assistants. It lives in Slack, will have access to your docs (as you allow) and can take actions in your various tools.
