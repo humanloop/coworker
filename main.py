@@ -6,24 +6,18 @@ from typing import Callable
 
 from dotenv import load_dotenv
 from humanloop import Humanloop
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler
-from slack_sdk import WebClient
 from pprint import pprint
 
+from slack_bolt.adapter.socket_mode import SocketModeHandler
+
 from tools.linear import create_linear_issue, list_linear_teams
-from tools.slack import message_user, no_action
+from tools.slack import message_user, no_action, web_client, slack
 from tools.utils import call_tool, parse_function
 
 load_dotenv()
 
 HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-
-app = App(token=os.getenv("SLACK_BOT_TOKEN"))
-web_client = WebClient(token=SLACK_BOT_TOKEN)
 humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
-
 
 tool_list = [
     no_action,
@@ -33,8 +27,10 @@ tool_list = [
 ]
 tools = [parse_function(t) for t in tool_list]
 
+enabled_channels = ["C05H2KT4LP5", "C05RKHTR0LQ"]  # bugs  # coworker-testing
 
-@app.event("team_join")
+
+@slack.event("team_join")
 def team_join(body, say):
     print("team_join")
     pprint(body)
@@ -82,7 +78,7 @@ def create_sections(context, next):
 
 # Listen for user opening app home
 # Include fetch_tasks middleware
-@app.event(event="app_home_opened", middleware=[fetch_tasks, create_sections])
+@slack.event(event="app_home_opened", middleware=[fetch_tasks, create_sections])
 def show_tasks(event, client, context):
     print("app_home_opened")
     # Publish view to user's home tab
@@ -91,29 +87,26 @@ def show_tasks(event, client, context):
     )
 
 
-# Listener middleware which filters out messages with "bot_message" subtype
-def no_bot_messages(message, next):
-    subtype = message.get("subtype")
-    if subtype != "bot_message":
-        next()
-
-
-def ignore_deletions(message, next):
-    subtype = message.get("subtype")
-    if subtype != "message_deleted":
-        next()
-
-
 # TODO: these events might have different structures
-@app.event("app_mention", middleware=[no_bot_messages])
-@app.event("message", middleware=[no_bot_messages, ignore_deletions])
+@slack.event("app_mention")
+@slack.event("message")
 def respond_to_messages(body: dict, say: Callable[[str], None]):
+    print(f"EVENT: {body['event']}")
+
+    # Ignore bot messages and deletions
+    if "subtype" in body["event"] and body["event"]["subtype"] in [
+        "bot_message",
+        "message_deleted",
+    ]:
+        return
+
     channel = body["event"]["channel"]
-    # Timestamps
-    thread_ts = body["event"].get(
-        "thread_ts"
-    )  # If the message is in a thread, this field will be populated
+    if channel not in enabled_channels:
+        return
+
     message_ts = body["event"]["ts"]  # timestamp of the message
+    # If the message is in a thread, this field will be populated
+    thread_ts = body["event"].get("thread_ts")
 
     # Acknowledge first
     response_message = say(
@@ -132,8 +125,6 @@ def respond_to_messages(body: dict, say: Callable[[str], None]):
             ts=thread_ts,
             limit=total_limit - 1,
             # This is to ignore any added message that we've put in the thread
-            # TODO: maybe it's better to filter out the bot? Just in case we want to
-            # include any other messages that have been added.
             latest=message_ts,
             inclusive=True,
         )
@@ -239,7 +230,6 @@ recent_chat_history:
         new_message_text = chat_response["output"]
 
     if new_message_text == "no_action":
-        # Delete the message
         web_client.chat_delete(
             channel=channel,
             ts=response_message["ts"],
@@ -249,10 +239,10 @@ recent_chat_history:
             channel=channel,
             ts=response_message["ts"],
             text=new_message_text,
-            # thread_ts=thread_ts,  # Keep the thread # Not sure what this does
+            thread_ts=thread_ts,
         )
 
 
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.getenv("SLACK_APP_TOKEN"))
+    handler = SocketModeHandler(slack, os.getenv("SLACK_APP_TOKEN"))
     handler.start()

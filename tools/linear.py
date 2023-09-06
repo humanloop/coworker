@@ -1,19 +1,20 @@
 """Functions for interacting with Linear"""
-import os
-from typing import Callable, List
-from dotenv import load_dotenv
-import requests
 import json
+import os
 from pprint import pprint
+from typing import Callable
+
+import requests
+from dotenv import load_dotenv
 
 load_dotenv()
 LINEAR_API_KEY = os.getenv("LINEAR_API_KEY")
+LINEAR_TEAM_ID = "a71e2092-2815-4546-8254-00f7ed3f4068"
 
 
 def create_linear_issue(
     title: str,
     description: str,
-    team_id: str,
     priority: str,
     confirmed: bool,
     _say: Callable[[str], None] = print,
@@ -23,12 +24,10 @@ def create_linear_issue(
     Args:
         title (str): The title of the issue
         description (str): The description of the issue
-        team_id (str): The 36 char ID of the team to create the issue in
         priority (str): The priority of the issue
         labels (List[str]): The labels to apply to the issue
         confirmed (bool): Whether the user has confirmed the details of the issue \
           as in they have seen the full json arguments and accepted (default False)
-
     """
     url = "https://api.linear.app/graphql"
     headers = {"Authorization": LINEAR_API_KEY, "Content-Type": "application/json"}
@@ -38,7 +37,8 @@ def create_linear_issue(
       issueCreate(input: {
         title: $title,
         description: $description,
-        teamId: $teamId
+        teamId: $teamId,
+        priority: $priority,
       }) {
         success
         issue {
@@ -54,7 +54,8 @@ def create_linear_issue(
     variables = {
         "title": title,
         "description": description,
-        "teamId": "a71e2092-2815-4546-8254-00f7ed3f4068",
+        "teamId": LINEAR_TEAM_ID,
+        "priority": priority,
     }
 
     if not confirmed:
