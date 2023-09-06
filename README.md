@@ -1,7 +1,7 @@
 Coworker
 ===========
 
-![Logo](./coworker-logo.png)
+![Logo](./logo.png)
 
 Your AI Coworker that lives in Slack.
 
