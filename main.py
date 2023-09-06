@@ -229,7 +229,6 @@ recent_chat_history:
         new_message_text = chat_response["output"]
 
     if new_message_text == "no_action":
-        # Delete the message
         web_client.chat_delete(
             channel=channel,
             ts=response_message["ts"],
@@ -239,7 +238,7 @@ recent_chat_history:
             channel=channel,
             ts=response_message["ts"],
             text=new_message_text,
-            # thread_ts=thread_ts,  # Keep the thread # Not sure what this does
+            thread_ts=thread_ts,
         )
 
 
