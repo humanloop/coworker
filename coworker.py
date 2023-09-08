@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 from pprint import pprint
-from typing import Callable
+from typing import Callable, Optional
 
 from dotenv import load_dotenv
 from humanloop import Humanloop
@@ -28,6 +28,12 @@ ENABLED_TOOLS = [
 ENABLED_CHANNELS = ["C05H2KT4LP5", "C05RKHTR0LQ"]  # bugs  # coworker-testing
 
 
+class Message:
+    role: str
+    name: Optional[str]
+    content: str
+
+
 tool_schemas = [parse_function(t) for t in ENABLED_TOOLS]
 
 
@@ -45,14 +51,15 @@ def handle_app_home_opened_events(body, logger):
 @slack.event("message")
 def handle_message(body: dict, say: Callable[[str], None]):
     """A message was sent to a channel"""
-    print(f"EVENT TYPE: {body['event']['type']}")
+    print(
+        f"EVENT TYPE: {body['event']['type']}  {body['event']['subtype'] if 'subtype' in body['event'] else ''}"  # noqa: E501
+    )
     # Ignore bot messages and deletions
     if "subtype" in body["event"] and body["event"]["subtype"] in [
         "bot_message",
         "message_deleted",
         "message_changed",
     ]:
-        print(f'{body["event"]["subtype"]}')
         return
 
     # If in public channels (not a DM) check if the channel is enabled
@@ -91,7 +98,7 @@ def respond(body: dict, say: Callable[[str], None]):
     total_limit = 11
     context_messages = []
 
-    # Step 1: Fetch threaded messages if available
+    # Step 1: Fetch threaded messages if we're in a thread
     if thread_ts:
         print("thread_ts")
         replies = web_client.conversations_replies(
@@ -173,11 +180,12 @@ recent_chat_history:
 
 """,
                 },
-                {"role": "user", "name": user, "content": current_message},
             ],
         },
         inputs={"history": history},
-        messages=[],
+        messages=[
+            {"role": "user", "name": user, "content": current_message},
+        ],
     )
 
     chat_response = response.body["data"][0]
@@ -189,6 +197,7 @@ recent_chat_history:
         "response_message": response_message,
     }
 
+    print(chat_response)
     # Update the initial message
     if chat_response["finish_reason"] == "tool_call":
         tool_name = chat_response["tool_call"]["name"]
