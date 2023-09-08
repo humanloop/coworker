@@ -2,7 +2,6 @@
 import json
 import os
 from pprint import pprint
-from typing import Callable
 
 import requests
 from dotenv import load_dotenv
@@ -17,8 +16,7 @@ def create_linear_issue(
     description: str,
     confirmed: bool,
     priority: int = 0,
-    _helpers: dict = None,
-):
+) -> str:
     """Create an issue in Linear.
 
     Args:
@@ -63,52 +61,29 @@ mutation CreateIssue(
         "teamId": LINEAR_TEAM_ID,
         "priority": int(priority),
     }
-    print(variables)
-    web_client = _helpers["web_client"]
+    pprint(variables)
     if not confirmed:
-        web_client.chat_update(
-            channel=_helpers["channel"],
-            ts=_helpers["response_message"]["ts"],
-            text=json.dumps(variables, indent=4),
-            thread_ts=_helpers["thread_ts"],
-        )
+        return f"""Create issue with the following details?\n
+*Title:* {title}\n*Description:* {description}\n*Priority:* {priority}"""
 
     response = requests.post(
         url, headers=headers, json={"query": query, "variables": variables}
     )
 
     if response.status_code == 200:
-        pprint(response.text)
-        if response.status_code == 200:
-            response_data = json.loads(response.text)
-            issue_data = (
-                response_data.get("data", {}).get("issueCreate", {}).get("issue", {})
-            )
-            if issue_data:
-                issue_title = issue_data.get("title")
-                issue_description = issue_data.get("description")
-                issue_url = issue_data.get("url")
-                slack_message = f"Issue Created: *<{issue_url}|{issue_title}>*\nDescription: {issue_description}"
-                web_client.chat_update(
-                    channel=_helpers["channel"],
-                    ts=_helpers["response_message"]["ts"],
-                    text=slack_message,
-                    thread_ts=_helpers["thread_ts"],
-                )
-            else:
-                web_client.chat_update(
-                    channel=_helpers["channel"],
-                    ts=_helpers["response_message"]["ts"],
-                    text="Failed to create issue.",
-                    thread_ts=_helpers["thread_ts"],
-                )
-        return json.loads(response.text)
-    else:
-        print(variables)
-        raise Exception(f"Failed to create issue: {response.text}")
+        response_data = json.loads(response.text)
+        issue_data = (
+            response_data.get("data", {}).get("issueCreate", {}).get("issue", {})
+        )
+        if issue_data:
+            issue_title = issue_data.get("title")
+            issue_description = issue_data.get("description")
+            issue_url = issue_data.get("url")
+            return f"Issue Created: *<{issue_url}|{issue_title}>*\nDescription: {issue_description}"
+    return f"Failed to create issue: {response.text}"
 
 
-def list_linear_teams():
+def list_linear_teams() -> str:
     """List the IDs of the teams in Linear"""
     url = "https://api.linear.app/graphql"
     headers = {"Authorization": LINEAR_API_KEY, "Content-Type": "application/json"}
@@ -130,7 +105,7 @@ def list_linear_teams():
         teams_data = (
             json.loads(response.text).get("data", {}).get("teams", {}).get("nodes", [])
         )
-        return teams_data
+        return json.dumps(teams_data, indent=2)
     else:
         raise Exception(f"Failed to list teams: {response.text}")
 

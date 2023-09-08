@@ -57,9 +57,7 @@ def convert_type(annotation_type: str):
     }[annotation_type]
 
 
-def call_tool(
-    tool_name: str, args: dict, tools: List[Callable], helpers: Dict[str, Callable]
-):
+def call_tool(tool_name: str, args: dict, tools: List[Callable]):
     """Takes a a tool_names and list of tools and calls the appropriate function."""
 
     tool = [t for t in tools if t.__name__ == tool_name][0]
@@ -67,11 +65,7 @@ def call_tool(
     if not tool:
         return RuntimeError("Function not found")
     try:
-        # If the tool has a say argument, pass the say function to it
-        if "_helpers" in signature(tool).parameters:
-            result = tool(**args, _helpers=helpers)
-        else:
-            result = tool(**args)
+        result = tool(**args)
     except ValueError as err:
         result = f"Error: {err}"
     return result

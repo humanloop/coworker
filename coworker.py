@@ -79,7 +79,7 @@ def handle_app_mentions(body: dict, say: Callable[[str], None]):
         "bot_message",
         "message_deleted",
     ]:
-        return
+        return "OK"
     return respond(body, say)
 
 
@@ -89,11 +89,11 @@ def respond(body: dict, say: Callable[[str], None]):
     thread_ts = body["event"].get("thread_ts")
     channel = body["event"]["channel"]
 
-    # Acknowledge first
-    response_message = say(
-        text="Thinking...",
-        thread_ts=thread_ts if thread_ts else message_ts,
-    )
+    # # Acknowledge first
+    # response_message = say(
+    #     text="Thinking...",
+    #     thread_ts=thread_ts if thread_ts else message_ts,
+    # )
 
     total_limit = 11
     context_messages = []
@@ -143,8 +143,6 @@ def respond(body: dict, say: Callable[[str], None]):
     print("\n\n")
     pprint([msg[:40] for msg in formatted_messages])
     print("\n\n")
-    # The current message is the top one in the list
-    current_message = formatted_messages[0]
 
     # Join the messages to form the history string
     # Excluding the current message and go from oldest to newest
@@ -165,13 +163,10 @@ You are an AI agent that orchestrates other AI agents and organises tasks in Sla
 You read every message that flows through Slack. If you think you can do something useful, you initiate that action. 
 The only way for you to interact with the user is by using the functions provided.
 
-Before taking any action you should always send a message to the user with your 
-suggested next step and only do the actual task execution if you get their confirmation.
-
 The majority of messages should use the "no_action" function. Only use a different 
 function if you're very sure it will be useful as wse want to avoid bothering users. 
 
-ONLY CALL A FUNCTION, DO NOT RESPOND WITH TEXT.
+ONLY CALL A FUNCTION, DO NOT RESPOND WITH TEXT. DEFAULT TO CALLING `no_action`.
 
 recent_chat_history:
 ###
@@ -184,52 +179,39 @@ recent_chat_history:
         },
         inputs={"history": history},
         messages=[
-            {"role": "user", "name": user, "content": current_message},
+            {"role": "user", "name": user, "content": formatted_messages[0]},
         ],
     )
 
     chat_response = response.body["data"][0]
 
-    helpers = {
-        "web_client": web_client,
-        "channel": channel,
-        "thread_ts": thread_ts,
-        "response_message": response_message,
-    }
-
     print(chat_response)
-    # Update the initial message
     if chat_response["finish_reason"] == "tool_call":
         tool_name = chat_response["tool_call"]["name"]
         args = json.loads(chat_response["tool_call"]["arguments"])
-        if tool_name == "message_user":
-            new_message_text = args["message"]
-        elif tool_name == "no_action":
-            new_message_text = "no_action"
-            pprint("No action.")
-            pass
-        else:
-            # TODO: make the say function add to the thread.
-            tool_response = call_tool(tool_name, args, ENABLED_TOOLS, helpers)
-            print(f"Tool Response: {tool_response}")
-            new_message_text = tool_response
-
+        new_message_text = call_tool(tool_name, args, ENABLED_TOOLS)
     else:
+        # This shouldn't happen if it respects the prompt
         print("TOOL NOT CALLED")
         new_message_text = chat_response["output"]
 
-    if new_message_text == "no_action":
-        web_client.chat_delete(
+    print("→ ", new_message_text)
+    if new_message_text:
+        # web_client.chat_update(
+        #     channel=channel,
+        #     ts=response_message["ts"],
+        #     text=new_message_text,
+        #     thread_ts=thread_ts,
+        # )
+        web_client.chat_postMessage(
             channel=channel,
-            ts=response_message["ts"],
-        )
-    else:
-        web_client.chat_update(
-            channel=channel,
-            ts=response_message["ts"],
             text=new_message_text,
-            thread_ts=thread_ts,
+            thread_ts=thread_ts if thread_ts else message_ts,
         )
+
+    # else:
+    # web_client.chat_delete(channel=channel, ts=response_message["ts"])
+    return "OK"
 
 
 if __name__ == "__main__":

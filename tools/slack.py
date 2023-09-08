@@ -1,33 +1,31 @@
 """Slack API helper functions"""
+import json
 import os
 from pprint import pprint
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from slack_bolt import App
 from slack_sdk import WebClient
-
 
 load_dotenv()
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")
 web_client = WebClient(token=SLACK_BOT_TOKEN)
-slack = App(token=SLACK_BOT_TOKEN)
 
 
-def no_action():
+def no_action() -> str:
     """No action needs to be taken"""
-    pass
+    return ""
 
 
-def message_user(message: str):
+def message_user(message: str) -> str:
     """Sends a message to the user offering to help them or confirming any detals."""
     # This doesn't actually do anything here, because we still do this in main. It's
     # just for signature and docstring here.
-    pass
+    return message
 
 
-def list_channels():
+def list_channels() -> str:
     """List the channels in the workspace"""
     cursor = None
     channels = {}
@@ -42,8 +40,8 @@ def list_channels():
         else:
             print(f'Error: {response["error"]}')
             break
-    return channels
+    return json.dumps([f"{k} {v['id']}" for k, v in list_channels().items()])
 
 
 if __name__ == "__main__":
-    pprint([f"{k} {v['id']}" for k, v in list_channels().items()])
+    pprint(list_channels())
