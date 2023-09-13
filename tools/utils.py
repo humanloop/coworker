@@ -1,6 +1,6 @@
 from inspect import signature
 from pprint import pprint
-from typing import Callable, Dict, List
+from typing import Callable, Dict, Generator, List
 
 from docstring_parser import parse
 
@@ -57,18 +57,24 @@ def convert_type(annotation_type: str):
     }[annotation_type]
 
 
-def call_tool(tool_name: str, args: dict, tools: List[Callable]):
+def call_tool(
+    tool_name: str, args: dict, tools: List[Callable]
+) -> Generator[str, None, None]:
     """Takes a a tool_names and list of tools and calls the appropriate function."""
 
     tool = [t for t in tools if t.__name__ == tool_name][0]
 
     if not tool:
-        return RuntimeError("Function not found")
+        raise RuntimeError("Function not found")
     try:
-        result = tool(**args)
+        results = tool(**args)
+        if isinstance(results, str):
+            yield results
+        else:
+            for result in results:
+                yield result
     except ValueError as err:
-        result = f"Error: {err}"
-    return result
+        yield f"Error: {err}"
 
 
 if __name__ == "__main__":

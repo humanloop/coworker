@@ -22,18 +22,20 @@ def create_linear_issue(
     Args:
         title (str): The title of the issue
         description (str): The description of the issue
-        priority (int): The priority of the issue either None (0), High (1), Medium (2), or Low (3)
+        priority (int): The priority of the issue either None (0), High (1), Medium (2),
+        or Low (3)
         labels (List[str]): The labels to apply to the issue 
         confirmed (bool): Whether the user has confirmed the details of the issue \
           as in they have seen the full json arguments and accepted (default False)
     """
     url = "https://api.linear.app/graphql"
     headers = {"Authorization": LINEAR_API_KEY, "Content-Type": "application/json"}
+    yield "working on it..."
 
     query = """
 mutation CreateIssue(
     $title: String!, 
-    $description: String, 
+        $description: String, 
     $teamId: String!, 
     $priority: Int 
 ) {
@@ -63,12 +65,13 @@ mutation CreateIssue(
     }
     pprint(variables)
     if not confirmed:
-        return f"""Create issue with the following details?\n
+        yield f"""Create issue with the following details?\n
 *Title:* {title}\n*Description:* {description}\n*Priority:* {priority}"""
 
     response = requests.post(
         url, headers=headers, json={"query": query, "variables": variables}
     )
+    yield "sent to linear"
 
     if response.status_code == 200:
         response_data = json.loads(response.text)
@@ -79,8 +82,8 @@ mutation CreateIssue(
             issue_title = issue_data.get("title")
             issue_description = issue_data.get("description")
             issue_url = issue_data.get("url")
-            return f"Issue Created: *<{issue_url}|{issue_title}>*\nDescription: {issue_description}"
-    return f"Failed to create issue: {response.text}"
+            yield f"Issue Created: *<{issue_url}|{issue_title}>*\nDescription: {issue_description}"
+    yield f"Failed to create issue: {response.text}"
 
 
 def list_linear_teams() -> str:

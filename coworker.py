@@ -207,23 +207,28 @@ ONLY CALL A FUNCTION, DO NOT RESPOND WITH TEXT. DEFAULT TO CALLING `no_action`.
     )
 
     chat_response = response.body["data"][0]
-
     if chat_response["finish_reason"] == "tool_call":
         tool_name = chat_response["tool_call"]["name"]
         args = json.loads(chat_response["tool_call"]["arguments"])
-        new_message_text = call_tool(tool_name, args, ENABLED_TOOLS)
+        for new_message_text in call_tool(tool_name, args, ENABLED_TOOLS):
+            print("→ ", new_message_text)
+            if new_message_text:
+                slack_client.chat_postMessage(
+                    channel=channel,
+                    text=new_message_text,
+                    thread_ts=thread_ts if thread_ts else message_ts,
+                )
+
     else:
         # This shouldn't happen if it respects the prompt
         print("TOOL NOT CALLED")
         new_message_text = chat_response["output"]
-
-    print("→ ", new_message_text)
-    if new_message_text:
-        slack_client.chat_postMessage(
-            channel=channel,
-            text=new_message_text,
-            thread_ts=thread_ts if thread_ts else message_ts,
-        )
+        if new_message_text:
+            slack_client.chat_postMessage(
+                channel=channel,
+                text=new_message_text,
+                thread_ts=thread_ts if thread_ts else message_ts,
+            )
     return "OK"
 
 
