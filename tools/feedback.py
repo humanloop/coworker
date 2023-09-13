@@ -4,7 +4,6 @@ def log_user_feedback(
     urgency: str,
     category: str,
     date: str,
-    _say,
     _filename: str = "tools/feedback.csv",
 ):
     """Records user feedback from customers so that it can be later used
@@ -27,4 +26,4 @@ def log_user_feedback(
     with open(_filename, "a") as file:
         file.write(f"{company_name},{description},{urgency},{category},{date}\n")
 
-    _say("User feedback recorded successfully.")
+    return f"Logged feedback.\n *Company Name:* {company_name}\n *Description:* {description}\n *Urgency:* {urgency}\n *Category:* {category}\n *Date:* {date}"
