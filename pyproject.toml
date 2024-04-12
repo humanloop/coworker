@@ -16,7 +16,7 @@ humanloop = "^0.5.6"
 docstring-parser = "^0.15"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.7.0"
+black = "^24.3.0"
 py-mon = "^1.1.1"
 jurigged = "^0.5.6"
 
