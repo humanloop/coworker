@@ -22,7 +22,7 @@ slack_client = WebClient(token=SLACK_BOT_TOKEN)
 app = App(token=SLACK_BOT_TOKEN)
 
 HUMANLOOP_API_KEY = os.getenv("HUMANLOOP_API_KEY")
-humanloop = Humanloop(api_key=HUMANLOOP_API_KEY)
+humanloop = Humanloop(api_key=HUMANLOOP_API_KEY, host="https://neostaging.humanloop.ml/v4")
 
 
 ENABLED_TOOLS = [
@@ -183,7 +183,7 @@ def respond(body: dict, say: Callable[[str], None]):
         project="coworker/Brain",
         model_config={
             "tools": tool_schemas,
-            "model": "gpt-4",
+            "model": "gpt-4o",
             "max_tokens": -1,
             "temperature": 0.7,
             "chat_template": [
@@ -206,16 +206,16 @@ ONLY CALL A FUNCTION, DO NOT RESPOND WITH TEXT. DEFAULT TO CALLING `no_action`.
         messages=formatted_messages[0:][::-1],
     )
 
-    chat_response = response.body["data"][0]
+    chat_response = response.data[0]
 
-    if chat_response["finish_reason"] == "tool_call":
-        tool_name = chat_response["tool_call"]["name"]
-        args = json.loads(chat_response["tool_call"]["arguments"])
+    if chat_response.finish_reason == "tool_call":
+        tool_name = chat_response.tool_call.name
+        args = json.loads(chat_response.tool_call.arguments)
         new_message_text = call_tool(tool_name, args, ENABLED_TOOLS)
     else:
         # This shouldn't happen if it respects the prompt
         print("TOOL NOT CALLED")
-        new_message_text = chat_response["output"]
+        new_message_text = chat_response.output
 
     print("→ ", new_message_text)
     if new_message_text:

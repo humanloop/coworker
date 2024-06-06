@@ -12,7 +12,7 @@ requests = "^2.31.0"
 slack-bolt = "^1.18.0"
 python-dotenv = "^1.0.0"
 slack-sdk = "^3.21.3"
-humanloop = "^0.5.6"
+humanloop = "^0.7.27"
 docstring-parser = "^0.15"
 
 [tool.poetry.group.dev.dependencies]
