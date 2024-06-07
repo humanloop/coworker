@@ -1,4 +1,4 @@
-# """Test that the connection to Humanloop is OK."""
+# """Test that the connections are OK."""
 
 import json
 import os
@@ -7,6 +7,18 @@ from pprint import pprint
 
 from dotenv import load_dotenv
 from humanloop import Humanloop
+from slack_bolt import App
+from slack_bolt.adapter.socket_mode import SocketModeHandler
+from slack_sdk import WebClient
+
+from tools.slack import list_channels
+
+load_dotenv()
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
+SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")
+slack_client = WebClient(token=SLACK_BOT_TOKEN)
+app = App(token=SLACK_BOT_TOKEN)
+
 
 load_dotenv()
 
@@ -15,4 +27,6 @@ humanloop = Humanloop(api_key=HUMANLOOP_API_KEY, host="https://neostaging.humanl
 
 
 if __name__ == "__main__":
-    print(humanloop.projects.list())
+    pprint(humanloop.projects.list())
+    pprint(list_channels())
+

@@ -14,8 +14,7 @@ def parse_function(func: Callable):
     docs = parse(func.__doc__)
     param_docs = {p.arg_name: p for p in docs.params}
     sig = signature(func)
-    # Drop any parameters that are private (with leading `_`)
-    parameters = {k: v for k, v in sig.parameters.items() if not k.startswith("_")}
+    parameters = {k: v for k, v in sig.parameters.items()}
 
     required = [k for k, v in parameters.items() if v.kind == v.POSITIONAL_OR_KEYWORD]
 

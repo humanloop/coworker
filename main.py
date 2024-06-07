@@ -10,7 +10,7 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk import WebClient
 
-from tools.feedback import log_user_feedback
+from tools.feedback import log_user_feedback, read_feedback
 from tools.linear import create_linear_issue, list_linear_teams
 from tools.slack import _list_users, message_user, no_action
 from tools.utils import call_tool, parse_function
@@ -31,8 +31,9 @@ ENABLED_TOOLS = [
     create_linear_issue,
     list_linear_teams,
     log_user_feedback,
+    read_feedback,
 ]
-ENABLED_CHANNELS = ["C05H2KT4LP5", "C05RKHTR0LQ"]  # bugs  # coworker-testing
+ENABLED_CHANNELS = ["C05RKHTR0LQ"]  # bugs  # coworker-testing
 
 
 class Message:
@@ -79,6 +80,17 @@ def handle_message(body: dict, say: Callable[[str], None]):
 
     return respond(body, say)
 
+@app.command("/issue")
+def handle_issue(ack, say, command):
+    # Acknowledge command request
+    ack()
+    # Process command
+    text = command["text"]
+    # Here you can add the logic to create a Linear issue
+    # For example, you can call the `create_linear_issue` function from `tools/linear.py`
+    # Make sure to parse the `text` into the arguments needed for `create_linear_issue`
+    # Then, you can send a message back to the user
+    say(f"Created a new issue: {text}")
 
 @app.event("app_mention")
 def handle_app_mentions(body: dict, say: Callable[[str], None]):
@@ -98,12 +110,6 @@ def respond(body: dict, say: Callable[[str], None]):
     # If the message is in a thread, this field will be populated
     thread_ts = body["event"].get("thread_ts")
     channel = body["event"]["channel"]
-
-    # # Acknowledge first
-    # response_message = say(
-    #     text="Thinking...",
-    #     thread_ts=thread_ts if thread_ts else message_ts,
-    # )
 
     total_limit = 11
     context_messages = []
